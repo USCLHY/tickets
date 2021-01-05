@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 引入 echarts.js -->
+    <script src="../js/echarts.min.js"></script>
+</head>
+<body>
+<div id="report_search">
+	<label class="navy_lbl">--按年统计--</label>
+	<label class="navy_lbl">&nbsp;&nbsp;&nbsp;年份：</label>
+	<input type="number" id="report_search_myyear" class="navy_ipt_200" min=2012 max="2020" value="2012"/>
+	<a href="javascript:sumByYear()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">打印</a>
+	<p></p>
+	<label class="navy_lbl">--按年月统计--</label>
+	<label class="navy_lbl">年份：</label>
+	<input type="number" id="report_search_year" class="navy_ipt_200" min=2012 max="2020" value="2012"/>
+	<label class="navy_lbl">月份：</label>
+	<input type="number" id="report_search_month" class="navy_ipt_200" min="1" max="12" value="1"/>
+	<a href="javascript:sumByMonth()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">打印</a>
+	<p></p>
+	<label class="navy_lbl">--按日期统计--</label>
+	<label class="navy_lbl">日期：</label>
+	<input type="date" id="report_search_date" class="navy_ipt_200">
+	<a href="javascript:sumByDate()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">打印</a>
+	<p></p>
+</div>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 600px;height:400px;margin-top:20px"></div>
+    <script type="text/javascript">
+var myChart;
+$(function(){
+	var str="<option value=''>--请选择--</option>";
+	//将数据渲染到前台界面
+	$.post("../../TrainNumberServlet/lhyfindByPage", { page:1, rows:10}, data=>{
+			$.each(data.rows, function(index, item){
+				str += "<option value="+ item.tid +">"+ item.tname +"</option>";	
+			})
+			$("#report_search_tname").html("").append(str);
+	}, "json");
+	//显示表格
+	showreportDataGrid();
+})
+function sumByYear(){
+	var year = $("#report_search_myyear").val();
+	if(year != "" && year != undefined){
+		$.post("../../OrderItemServlet/lhysumByYear", { year:year}, rt=>{
+			var tnameList = new Array(rt.length);
+			var sumList = new Array(rt.length);
+			$.each(rt, function(index, item){
+				tnameList[index] = item.tname;
+				sumList[index] = item.sum;
+			})
+			var option = {
+				title:{
+					text:"按年统计"
+				},
+				tooltip:{
+					
+				},
+				legend:{
+					data: tnameList
+				},
+				yAxis:{
+					
+				},
+				series:[{
+				   name: '营业额/元',
+	               type: 'bar',
+	               data: sumList
+				}]
+			};
+			// 使用刚指定的配置项和数据显示图表。
+		       myChart.setOption(option);
+		}, "json")
+	}
+}
+function sumByMonth(){
+	var year = $("#report_search_year").val();
+	var month = $("#report_search_month").val();
+	if(year != "" && year != undefined){
+		$.post("../../OrderItemServlet/lhysumByMonth", { year:year, month:month}, rt=>{
+			var tnameList = new Array(rt.length);
+			var sumList = new Array(rt.length);
+			$.each(rt, function(index, item){
+				tnameList[index] = item.tname;
+				sumList[index] = item.sum;
+			})
+			var option = {
+				title:{
+					text:"按年月统计"
+				},
+				tooltip:{
+					
+				},
+				legend:{
+					data: tnameList
+				},
+				yAxis:{
+					
+				},
+				series:[{
+				   name: '营业额/元',
+	               type: 'bar',
+	               data: sumList
+				}]
+			};
+			// 使用刚指定的配置项和数据显示图表。
+		       myChart.setOption(option);
+		}, "json")
+	}
+}
+function sumByDate(){
+	//获取input.val
+	var year = $("#report_search_year").val();
+	var month = $("#report_search_month").val();
+	var date = $("#report_search_date").val();
+	console.log(year+"--"+month+"--"+date);
+	if(date != "" && date != undefined){
+		//按日期统计
+		$.post("../../OrderItemServlet/lhysumByDate", { date:date}, rt=>{
+			console.log(rt);
+			var tnameList = new Array(rt.length);
+			var sumList = new Array(rt.length);
+			$.each(rt, function(index, item){
+				tnameList[index] = item.tname;
+				sumList[index] = item.sum;
+			})
+			var option = {
+				title:{
+					text:"按日期统计"
+				},
+				tooltip:{
+					
+				},
+				legend:{
+					data: tnameList
+				},
+				yAxis:{
+					
+				},
+				series:[{
+				   name: '营业额/元',
+	               type: 'bar',
+	               data: sumList
+				}]
+			};
+			// 使用刚指定的配置项和数据显示图表。
+		       myChart.setOption(option);
+		}, "json");
+	}
+}
+
+function showreportDataGrid(){
+	// 基于准备好的dom，初始化echarts实例
+	myChart = echarts.init(document.getElementById('main'));
+	$.post("../../OrderItemServlet/lhysumByTid", {}, rt=>{
+		var tnameList = new Array(rt.length);
+		var sumList = new Array(rt.length);
+		$.each(rt, function(index, item){
+			tnameList[index] = item.tname;
+			sumList[index] = item.sum;
+		})
+		// 指定图表的配置项和数据
+	       var option = {
+	           title: {
+	               text: '列车营业额统计'
+	           },
+	           tooltip: {},
+	           legend: {
+	               data:['营业额/元']
+	           },
+	           xAxis: {
+	               data: tnameList
+	           },
+			yAxis: {},
+	           series: [{
+	               name: '营业额/元',
+	               type: 'bar',
+	               data: sumList
+	           }]
+	       };
+
+	       // 使用刚指定的配置项和数据显示图表。
+	       myChart.setOption(option);
+	}, "json")
+}
+    </script>
+</body>
+</html>

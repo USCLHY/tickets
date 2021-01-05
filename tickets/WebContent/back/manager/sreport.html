@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 引入 echarts.js -->
+    <script src="../js/echarts.min.js"></script>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="smain" style="width: 600px;height:400px;"></div>
+    <button onclick="ExpertExcel()">导出至excel表</button>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('smain'));
+		$.post("../../OrderItemServlet/lhysumByTid", {}, rt=>{
+			var tnameList = new Array(rt.length);
+			var sumList = new Array(rt.length);
+			$.each(rt, function(index, item){
+				tnameList[index] = item.tname;
+				sumList[index] = item.sum;
+			})
+			// 指定图表的配置项和数据
+	        var option = {
+	            title: {
+	                text: '列车营业额统计'
+	            },
+	            tooltip: {},
+	            legend: {
+	                data:['营业额/元']
+	            },
+	            xAxis: {
+	                data: tnameList
+	            },
+				yAxis: {},
+	            series: [{
+	                name: '营业额/元',
+	                type: 'bar',
+	                data: sumList
+	            }]
+	        };
+
+	        // 使用刚指定的配置项和数据显示图表。
+	        myChart.setOption(option);
+		}, "json")
+		
+		function ExpertExcel(){
+			 $.post("../../OrderItemServlet/ExportExcel" , {} , rt => {
+				 console.info( rt );
+				 if ( rt.code == 200  ) {
+					 $.messager.show({title:"成功提示", msg:"成功导出运营信息", timeout:2000, showType:"slide"});
+				}else {
+					$.messager.show({title:"失败提示", msg:"运营信息导出失败", timeout:2000, showType:"slide"});
+				}
+			 });
+		}
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<table id="traintype_data" data-options="fit:true"></table>
+
+<script>
+var traintype_types;
+var traintype_obj;
+var traintype_op;
+var traintype_index = undefined;//记录当前正在编辑的行
+
+$(function(){
+	showtraintypeDataGrid();
+})
+
+function showtraintypeDataGrid(){
+	traintype_obj = $('#traintype_data').datagrid({
+		url:'../../TrainTypeServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:10,
+		pageList:[10,15,20,25,50,100],
+		sortName:"tid",
+		remoteSort:false,
+		columns:[[
+			{field:'tid', title:'车次类型编号', width:50, align:'center',sortable:'true'},
+			{field:'tname', title:'类型名称', width:70, align:'center', editor:{type:"text"}}]],
+ 		toolbar: [{
+			iconCls: "icon-add",
+			text: "添加",
+			handler:function(){
+				traintype_op = "add";
+				traintype_info = "添加";
+				if(traintype_index != undefined){
+					traintype_index = undefined;
+					return;
+				}
+				//在表格的最上面添加一行
+				traintype_obj.datagrid('insertRow', {index:0, row:{}});
+				traintype_index = 0;
+				traintype_obj.datagrid('beginEdit', traintype_index);
+			}
+		},  '-', {
+			iconCls: 'icon-save',
+			text: "保存",
+			handler:function(){
+				//如果没有编辑的行，则直接返回
+				if(traintype_index == undefined){
+					return;
+				}
+				traintype_obj.datagrid("endEdit", traintype_index);
+				var row = traintype_obj.datagrid("getChanges")[0];
+				if(row == undefined){
+					return;
+				}
+				row.op = traintype_op;
+				console.info(row);
+				$.post("../../TrainTypeServlet/lhy" + row.op, row, data=>{
+					if(data.code == 200){
+						$.messager.show({title:"成功提示", msg:"车次类型" + traintype_info + "成功...", timeout:2000, showType:"slide"});
+						traintype_obj.datagrid("reload");//刷新页面
+					}else{
+						//没有成功，回滚数据
+						traintype_obj.datagrid("rejectChanges");
+						$.messager.alert('失败提示', '车次类型' + traintype_info + '失败...', 'error');
+					}
+					row = null;
+					traintype_index = undefined;
+				}, "json");
+			}
+		}, '-', {
+			iconCls: 'icon-undo',
+			text:'撤销',
+			handler:function(){
+				traintype_index = undefined;
+				traintype_obj.datagrid("rejectChanges");
+			}
+		}] 
+	});
+}
+</script>

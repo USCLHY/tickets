@@ -1,0 +1,144 @@
+<table id="refundticket_data" data-options="fit:true"></table>
+
+<div id="refundticket_search">
+	<label class="navy_lbl">列车名称：</label>
+	<input type="text" id="refundticket_search_tname" class="navy_ipt_200">
+	<label class="navy_lbl">退票人：</label>
+	<input type="text" id="refundticket_search_uname" class="navy_ipt_200"/>
+	<label class="navy_lbl">乘客：</label>
+	<input type="text" id="refundticket_search_name" class="navy_ipt_200"/>
+	<label class="navy_lbl">退票时间：</label>
+	<input type="date" id="refundticket_search_refundtime" class="navy_ipt_200"/>
+	<label class="navy_lbl">状态：</label>
+	<select id="refundticket_search_status" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	<option value="0">待审核</option>
+	<option value="1">批准</option>
+	<option value="2">失败</option>
+	</select>
+	<a href="javascript:searchrefundticketInfo()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+</div>
+
+<div id="refundticket_dialog" class="easyui-dialog" data-options="resizable:true, model:true, closed:true">
+<form id="refundticket_form">
+	<ul>
+		<li><label for="refundticket_dialog_tname">列车名：</label>
+		<input type="text" id="refundticket_dialog_tname" class="navy_ipt200"/>
+		<li><label for="refundticket_dialog_date">购买日期：</label>
+		<input type="date" id="refundticket_dialog_date" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_identify">身份证：</label>
+		<input type="text" id="refundticket_dialog_identify" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_uname>">买票人：</label>
+		<input type="text" id="refundticket_dialog_uname>" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_name>">乘车人：</label>
+		<input type="text" id="refundticket_dialog_name>" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_money">票价：</label>
+		<input type="text" id="refundticket_dialog_money" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_type">票类型：</label>
+		<input type="text" id="refundticket_dialog_type" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_seattype">座位类型：</label>
+		<input type="text" id="refundticket_dialog_seattype" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_seatnumber">座位号：</label>
+		<input type="text" id="refundticket_dialog_seatnumber" class="navy_ipt200"/>
+		</li>
+		<li><label for="refundticket_dialog_status">状态：</label>
+		<input type="text" id="refundticket_dialog_status" class="navy_ipt200"/>
+		</li>
+	</ul>
+</form>
+</div>
+
+<style>
+#refundticket_form li{
+	list-style-type: none;
+	margin-top: 20px;
+}
+
+#refundticket_form li> label{
+	width: 100px;
+	display: inline-block;
+	text-align: right;
+}
+</style>
+
+<script>
+var refundticket_types;
+var refundticket_sites;
+var refundticket_obj;
+
+$(function(){
+	//显示表格
+	showrefundticketDataGrid();
+})
+
+function showrefundticketDataGrid(){
+	refundticket_obj = $('#refundticket_data').datagrid({
+		url:'../../RefundTicketsServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:10,
+		pageList:[10,15,20,25,50,100],
+		sortName:"rid",
+		remoteSort:false,
+		columns:[[
+			{field:'rid', title:'退票编号', width:50, align:'center',sortable:'true'},
+			{field:'tname', title:'列车名称', width:70, align:'center', editor:{type:"text"}},
+			{field:'uname',title:'退票人',width:100, align:'center', editor:{type:"text"}},
+			{field:'name',title:'乘客',width:100, align:'center', editor:{type:"text"}},
+			{field:'identify', title:'乘客身份证', width:100, align:'center', editor:{type:"text"}},
+			{field:'refundtime',title:'退票时间',width:100, align:'center', editor:{type:"text"}},
+			{field:'status',title:'审核状态',width:100, align:'center', formatter:function(val, row, index){
+				if(val == 0){
+					return '<font color="brown">待审核</font>';
+				}else if(val == 1){
+					return '<font color="green">批准</font>';
+				}else{
+					return '<font color="red">失败</font>';
+				}
+			}},
+			{field:'operatestatus', title:'审核', width:100, align:'center', formatter:function(val, row, index){
+				if(row.status == 0){
+					return '<a class="navy-icon-edit" href="javascript:updateStatus('+ row.rid + "," + 1 +')">批准</a>&nbsp;<a class="navy-icon-edit" href="javascript:updateStatus('+ row.rid + "," + 2 +')">不批准</a>';
+				}else{
+					return '<a color="green">审核完成</a>';
+				}
+			}}
+		]],
+		toolbar: "#refundticket_search"
+	});
+}
+function updateStatus(rid, status){
+	$.post("../../RefundTicketsServlet/lhyupdateStatus", { rid:rid, status:status}, data=>{
+		if(data.code == 200){
+			$.messager.show({title:"成功提示", msg:"审核完成", timeout:2000, showtype:"slide"});
+			refundticket_obj.datagrid("reload");
+		}else{
+			$.messager.show({title:"失败提示", msg:"审核失败", timeout:2000, showtype:"slide"});
+		}
+	}, "json")
+}
+function searchrefundticketInfo(){
+	var tname = $('#refundticket_search_tname').val(); 
+	var uname = $('#refundticket_search_uname').val(); 
+	var refundtime = $('#refundticket_search_refundtime').val(); 
+	var name = $('#refundticket_search_name').val(); 
+	var status = $('#refundticket_search_status').val();
+		refundticket_obj.datagrid({
+			url:"../../RefundTicketsServlet/lhyfindByCondition",
+			queryParams:{tid:tname, uname:uname, refundtime:refundtime, name:name, status:status}
+		})
+	refundticket_obj.datagrid("reload");
+}
+</script>

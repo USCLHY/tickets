@@ -1,0 +1,170 @@
+<table id="orderitem_data" data-options="fit:true"></table>
+
+<div id="orderitem_search">
+	<div class="datagrid-btn-separator"></div>
+	<label class="navy_lbl">列车名称：</label>
+	<select id="orderitem_search_tname" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	</select>
+	<label class="navy_lbl">用户名：</label>
+	<input type="text" id="orderitem_search_uname" class="navy_ipt_200"/>
+	<label class="navy_lbl">购买时间：</label>
+	<input type="date" id="orderitem_search_buytime" class="navy_ipt_200"/>
+	<label class="navy_lbl">乘客：</label>
+	<input type="text" id="orderitem_search_name" class="navy_ipt_200"/>
+	<label class="navy_lbl">状态：</label>
+	<select id="orderitem_search_status" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	<option value="1">已发车</option>
+	<option value="0">未发车</option>
+	</select>
+	<a href="javascript:searchorderitemInfo()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+</div>
+
+<div id="orderitem_dialog" class="easyui-dialog" data-options="resizable:true, model:true, closed:true">
+<form id="orderitem_form">
+	<ul>
+		<li><label for="orderitem_dialog_tname">列车名：</label>
+		<input type="text" id="orderitem_dialog_tname" class="navy_ipt200"/>
+		<li><label for="orderitem_dialog_date">购买日期：</label>
+		<input type="datetime" id="orderitem_dialog_date" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_identify">身份证：</label>
+		<input type="text" id="orderitem_dialog_identify" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_uname">买票人：</label>
+		<input type="text" id="orderitem_dialog_uname" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_name">乘车人：</label>
+		<input type="text" id="orderitem_dialog_name" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_money">票价：</label>
+		<input type="text" id="orderitem_dialog_money" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_type">票类型：</label>
+		<input type="text" id="orderitem_dialog_type" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_seattype">座位类型：</label>
+		<input type="text" id="orderitem_dialog_seattype" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_seatnumber">座位号：</label>
+		<input type="text" id="orderitem_dialog_seatnumber" class="navy_ipt200"/>
+		</li>
+		<li><label for="orderitem_dialog_status">状态：</label>
+		<input type="text" id="orderitem_dialog_status" class="navy_ipt200"/>
+		</li>
+	</ul>
+</form>
+</div>
+
+<style>
+#orderitem_form li{
+	list-style-type: none;
+	margin-top: 20px;
+}
+
+#orderitem_form li> label{
+	width: 100px;
+	display: inline-block;
+	text-align: right;
+}
+</style>
+
+<script>
+var orderitem_types;
+var orderitem_sites;
+var orderitem_obj;
+
+$(function(){
+	var str = "";
+	//显示表格
+	showorderitemDataGrid();
+	//将后台数据渲染到下拉框
+	$.post("../../TrainNumberServlet/lhyfindByPage", { page:1, rows:10}, data=>{
+		console.log(data.rows);
+		$.each(data.rows, function(index, item){
+			console.log(index + "--" + item);
+		})
+	})
+})
+
+function showorderitemDataGrid(){
+	orderitem_obj = $('#orderitem_data').datagrid({
+		url:'../../OrderItemServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:10,
+		pageList:[10,15,20,25,50,100],
+		sortName:"oid",
+		remoteSort:false,
+		columns:[[
+			{field:'oid', title:'订单编号', width:50, align:'center',sortable:'true'},
+			{field:'tname', title:'列车名称', width:70, align:'center', editor:{type:"text"}},
+			{field:'uname',title:'用户名称',width:100, align:'center', editor:{type:"text"}},
+			{field:'buytime',title:'购买时间',width:100, align:'center', editor:{type:"text"}},
+			{field:'name',title:'乘车人姓名',width:100, align:'center', editor:{type:"text"}},
+			{field:'status',title:'订单状态',width:100, align:'center', formatter:function(val, row, index){
+				if(val == 0){
+					return '<font color="red">未发车</font>';
+				}else{
+					return '<font color="green">已发车</font>';
+				}
+			}},
+			{field:'_operator', title:'操作', width:100, align:'center', formatter:function(val, row, index){
+				return '<a href="javascript:showorderitemInfoDetail('+ row.oid +')" class="navy-icon-detail">详细</a>';
+			}}
+		]],
+		toolbar: "#orderitem_search"
+	});
+}
+function searchorderitemInfo(){
+	var tname = $('#orderitem_search_tname').val(); 
+	var uname = $('#orderitem_search_uname').val(); 
+	var buytime = $('#orderitem_search_buytime').val(); 
+	var name = $('#orderitem_search_name').val(); 
+	var status = $('#orderitem_search_status').val();
+		orderitem_obj.datagrid({
+			url:"../../OrderItemServlet/lhyfindByCondition",
+			queryParams:{tid:tname, uname:uname, buytime:buytime, name:name, status:status}
+		})
+}
+function showorderitemInfoDetail(oid){
+	$("#orderitem_form ul li input").attr("readonly", true);
+	$.post("../../OrderItemServlet/lhyfindByOid", { oid:oid}, data=>{
+		if(data.code == 200){
+			data = data.data;//这里是data.data，因为传过来的是一个名为data的Json对象，但是真正要取的是里面的data.data
+		//将响应数据渲染到弹框中
+		$("#orderitem_dialog_tname").val(data.tname);
+		$("#orderitem_dialog_date").val(data.buytime);
+		$("#orderitem_dialog_identify").val(data.identify);
+		$("#orderitem_dialog_name").val(data.name);
+		$("#orderitem_dialog_uname").val(data.uname);
+		$("#orderitem_dialog_money").val(data.money);
+		$("#orderitem_dialog_type").val(data.type);
+		$("#orderitem_dialog_seattype").val(data.seattype);
+		$("#orderitem_dialog_seatnumber").val(data.seatnumber);
+		$("#orderitem_dialog_status").val(data.status);
+		$('#orderitem_dialog').dialog({
+			title: '运营详情信息',
+			fit:true,
+			buttons:[
+				{
+					text:"关闭",
+					iconCls:"icon-cancel",
+					handler:function(){
+						$('#orderitem_dialog').dialog('close')
+					}
+				}
+			]
+		});
+		
+		$('#orderitem_dialog').dialog('open');
+		}
+	}, "json");
+}
+</script>

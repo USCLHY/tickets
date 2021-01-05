@@ -1,0 +1,298 @@
+<table id="operate_data" data-options="fit:true"></table>
+
+<div id="operate_search">
+	<a href="javascript:showAddoperateInfoDialog()" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style='float:left'>添加</a>
+	<div class="datagrid-btn-separator"></div>
+	<label class="navy_lbl">列车名称：</label>
+	<select id="operate_search_tname" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	</select>
+	<label class="navy_lbl">发车日期：</label>
+	<input type="date" id="operate_search_date" class="navy_ipt_200"/>
+	<label class="navy_lbl">状态：</label>
+	<select id="operate_search_status" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	<option value="0">已发车</option>
+	<option value="1">未发车</option>
+	</select>
+	<a href="javascript:searchoperateInfo()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+</div>
+
+<div id="operate_dialog" class="easyui-dialog" data-options="resizable:true, model:true, closed:true">
+<form id="operate_form">
+	<ul>
+		<li><label for="operate_dialog_tname">列车名：</label>
+		<select id="operate_dialog_tname" class="navy_ipt200">
+		<option value="">--请选择--</option>
+		</select>
+		<li><label for="operate_dialog_date">发车日期：</label>
+		<input type="date" id="operate_dialog_date" class="navy_ipt200"/>
+		</li>
+		<li><label for="operate_dialog_starttime">发车时间：</label>
+		<input type="time" id="operate_dialog_starttime" class="navy_ipt200"/>
+		</li>
+		<li><label for="operate_dialog_endtime">到达时间：</label>
+		<input type="time" id="operate_dialog_endtime" class="navy_ipt200"/>
+		</li>
+		<li><label for="operate_dialog_rworemain">软卧剩余量：</label>
+		<input type="text" id="operate_dialog_rworemain" class="navy_ipt200"/>
+		</li>
+		<li><label for="operate_dialog_yworemain">硬卧剩余量：</label>
+		<input type="text" id="operate_dialog_yworemain" class="navy_ipt200"/>
+		</li>
+		<li><label for="operate_dialog_rzuoremain">软座剩余量：</label>
+		<input type="text" id="operate_dialog_rzuoremain" class="navy_ipt200"/>
+		</li>
+		<li><label for="operate_dialog_yzuoremain">硬座剩余量：</label>
+		<input type="text" id="operate_dialog_yzuoremain" class="navy_ipt200"/>
+		</li>
+		<li><label for="operate_dialog_zhanremain">站票剩余量：</label>
+		<input type="text" id="operate_dialog_zhanremain" class="navy_ipt200"/>
+		</li>
+	</ul>
+</form>
+</div>
+
+<style>
+#operate_form li{
+	list-style-type: none;
+	margin-top: 20px;
+}
+
+#operate_form li> label{
+	width: 100px;
+	display: inline-block;
+	text-align: right;
+}
+</style>
+
+<script>
+var operate_types;
+var operate_sites;
+var operate_obj;
+
+$(function(){
+	var str="<option value=''>--请选择--</option>";
+	//将数据渲染到前台界面
+	$.post("../../TrainNumberServlet/lhyfindByPage", { page:1, rows:10}, data=>{
+			$.each(data.rows, function(index, item){
+				str += "<option value="+ item.tid +">"+ item.tname +"</option>";	
+			})
+			$("#operate_search_tname").html("").append(str);
+			$("#operate_dialog_tname").html("").append(str);
+	}, "json");
+	//显示表格
+	showoperateDataGrid();
+})
+
+function showoperateDataGrid(){
+	operate_obj = $('#operate_data').datagrid({
+		url:'../../OperateServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:10,
+		pageList:[10,15,20,25,50,100],
+		sortName:"oid",
+		remoteSort:false,
+		columns:[[
+			{field:'oid', title:'运营编号', width:50, align:'center',sortable:'true'},
+			{field:'tname', title:'列车名称', width:70, align:'center', editor:{type:"text"}},
+			{field:'date',title:'发车日期',width:100, align:'center', editor:{type:"text"}},
+			{field:'starttime',title:'发车时间',width:100, align:'center', editor:{type:"text"}},
+			{field:'endtime',title:'到达时间',width:100, align:'center', editor:{type:"text"}},
+			{field:'_operator', title:'操作', width:100, align:'center', formatter:function(val, row, index){
+				return '<a href="javascript:showUpdateoperateInfoDialog('+ row.oid +')" class="navy-icon-edit">修改</a>&nbsp;<a href="javascript:showoperateInfoDetail('+ row.oid +')" class="navy-icon-detail">详细</a>';
+			}},
+			{field:'status', title:'修改状态', width:80, align:'center', formatter:function(val, row, index){
+				if(val == 0){
+					return '<a href="javascript:updateoperateStatus('+ row.oid + "," + row.status + ')" class="navy-icon-edit">误点</a>';
+				}else{
+					return '<a href="javascript:updateoperateStatus('+ row.oid + "," + row.status + ')" class="navy-icon-edit">正常</a>';
+				}
+			}}
+		]],
+		toolbar: "#operate_search"
+	});
+}
+function searchoperateInfo(){
+	var tname = $('#operate_search_tname').val(); 
+	var date = $('#operate_search_date').val();
+	var status = $('#operate_search_status').val();
+		operate_obj.datagrid({
+			url:"../../OperateServlet/lhyfindByCondition",
+			queryParams:{ tid:tname, date:date, status:status}
+		})
+}
+function updateoperateStatus(oid, status){
+	$.post("../../OperateServlet/lhyupdateStatus", { oid:oid, status:status}, data=>{
+		if(data.code == 200){
+			console.info(data);
+			showoperateDataGrid();
+		}
+	}, "json")
+}
+function showoperateInfoDetail(oid){
+	$("#operate_form ul li select").attr("disabled", true);
+	$("#operate_form ul li input").attr("readonly", true);
+	$("#operate_dialog_rworemain").parent().css("display", "");
+	$("#operate_dialog_yworemain").parent().css("display", "");
+	$("#operate_dialog_rzuoremain").parent().css("display", "");
+	$("#operate_dialog_yzuoremain").parent().css("display", "");
+	$("#operate_dialog_zhanremain").parent().css("display", "");
+	$("#operate_dialog_status").parent().css("display", "");
+	$.post("../../OperateServlet/lhyfindByOid", {  oid:oid}, data=>{
+		if(data.code == 200){
+			data = data.data;//这里是data.data，因为传过来的是一个名为data的Json对象，但是真正要取的是里面的data.data
+		//将响应数据渲染到弹框中
+		$("#operate_dialog_tname").val(data.tid);
+		$("#operate_dialog_date").val(data.date);
+		$("#operate_dialog_starttime").val(data.starttime);
+		$("#operate_dialog_endtime").val(data.endtime);
+		$("#operate_dialog_rworemain").val(data.rworemain);
+		$("#operate_dialog_yworemain").val(data.yworemain);
+		$("#operate_dialog_rzuoremain").val(data.rzuoremain);
+		$("#operate_dialog_yzuoremain").val(data.yzuoremain);
+		$("#operate_dialog_zhanremain").val(data.zhanremain);
+		$("#operate_dialog_status").val(data.status);
+		$('#operate_dialog').dialog({
+			title: '运营详情信息',
+			fit:true,
+			buttons:[
+				{
+					text:"关闭",
+					iconCls:"icon-cancel",
+					handler:function(){
+						$('#operate_dialog').dialog('close')
+					}
+				}
+			]
+		});
+		
+		$('#operate_dialog').dialog('open');
+		}
+	}, "json");
+}
+function showAddoperateInfoDialog(){
+	$("#operate_form ul li select").removeAttr("disabled");
+	$("#operate_form ul li input").removeAttr("readonly");
+	//将弹框信息清空
+	$("#operate_form")[0].reset();
+	$("#operate_dialog_rworemain").parent().css("display", "none");
+	$("#operate_dialog_yworemain").parent().css("display", "none");
+	$("#operate_dialog_rzuoremain").parent().css("display", "none");
+	$("#operate_dialog_yzuoremain").parent().css("display", "none");
+	$("#operate_dialog_zhanremain").parent().css("display", "none");
+	$("#operate_dialog_status").parent().css("display", "none");
+	//获取添加按钮
+	$("#operate_dialog").dialog({
+		title: '添加列车信息',
+		fit: true,
+		buttons:[
+			{
+				text:"添加",
+				iconCls:"icon-add",
+				handler:function(){
+					var tid = $("#operate_dialog_tname").val();
+					var date = $("#operate_dialog_date").val();
+					var starttime = $("#operate_dialog_starttime").val();
+					var endtime = $("#operate_dialog_endtime").val();
+					var rworemain, yworemain, rzuoremain, yzuoremain, zhanremain;
+					//从车次信息表查询该车座位数量
+					$.post("../../TrainNumberServlet/lhyfindByTid", { tid:tid}, data=>{
+						if(data.code==200){
+							data = data.data;
+							rworemain = data.rwo;
+							yworemain = data.ywo;
+							rzuoremain = data.rzuo;
+							yzuoremain = data.yzuo;
+							zhanremain = data.zhan;
+							//添加运营信息
+							$.post("../../OperateServlet/lhyadd", { tid:tid, rworemain:rworemain, yworemain:yworemain, rzuoremain:rzuoremain, yzuoremain:yzuoremain, zhanremain:zhanremain, date:date, starttime:starttime, endtime:endtime}, data=>{
+								if(data.code==200){
+									operate_obj.datagrid("reload");
+									$("#operate_dialog").dialog("close");
+									$.messager.show({title:"成功提示", msg:"运营信息添加成功..", timeout:2000, showType:"slide"});
+								}
+							}, "json")
+						}
+					}, "json");
+				}
+			},
+			{
+				text:"关闭",
+				iconCls:"icon-cancel",
+				handler:function(){
+					
+				}
+			}
+		]
+	})	
+	$('#operate_dialog').dialog('open');
+}
+function showUpdateoperateInfoDialog(oid){
+	$("#operate_form ul li select").attr("disabled", true);
+	//$("#operate_form ul li select").removeAttr("disabled");
+	$("#operate_form ul li input").removeAttr("readonly");
+	//将弹框信息清空
+	$("#operate_form")[0].reset();
+	$("#operate_dialog_rworemain").parent().css("display", "");
+	$("#operate_dialog_yworemain").parent().css("display", "");
+	$("#operate_dialog_rzuoremain").parent().css("display", "");
+	$("#operate_dialog_yzuoremain").parent().css("display", "");
+	$("#operate_dialog_zhanremain").parent().css("display", "");
+	$("#operate_dialog_status").parent().css("display", "");
+	$.post("../../OperateServlet/lhyfindByOid", {  oid:oid}, data=>{
+		if(data.code == 200){
+			data = data.data;//这里是data.data，因为传过来的是一个名为data的Json对象，但是真正要取的是里面的data.data
+		//将响应数据渲染到弹框中
+		$("#operate_dialog_tname").val(data.tid);
+		$("#operate_dialog_date").val(data.date);
+		$("#operate_dialog_starttime").val(data.starttime);
+		$("#operate_dialog_endtime").val(data.endtime);
+		$("#operate_dialog_rworemain").val(data.rworemain);
+		$("#operate_dialog_yworemain").val(data.yworemain);
+		$("#operate_dialog_rzuoremain").val(data.rzuoremain);
+		$("#operate_dialog_yzuoremain").val(data.yzuoremain);
+		$("#operate_dialog_zhanremain").val(data.zhanremain);
+		$("#operate_dialog_status").val(data.status);
+		$('#operate_dialog').dialog({
+			title: '运营详情信息',
+			fit:true,
+			buttons:[
+				{
+					text:"保存",
+					iconCls:"icon-save",
+					handler:function(){
+						$.post("../../OperateServlet/lhyupdate", {  oid:oid, tid:$("#operate_dialog_tname").val(), date:$("#operate_dialog_date").val(),
+							starttime:$("#operate_dialog_starttime").val(), endtime:$("#operate_dialog_endtime").val(), rworemain:$("#operate_dialog_rworemain").val(),
+							yworemain:$("#operate_dialog_yworemain").val(), rzuoremain:$("#operate_dialog_yzuoremain").val(), yzuoremain:$("#operate_dialog_yzuoremain").val(), zhanremain:$("#operate_dialog_zhanremain").val()}, data=>{
+								
+								if ( data.code == 200 ) {
+									$.messager.show({title:"成功提示", msg:"保存成功", timeout:2000, showType:"slide"});
+								}else {
+									$.messager.show({title:"失败提示", msg:"保存失败", timeout:2000, showType:"slide"});
+								}
+								
+						})
+					}
+				},
+				{
+					text:"关闭",
+					iconCls:"icon-cancel",
+					handler:function(){
+						$('#operate_dialog').dialog('close')
+					}
+				}
+			]
+		});
+		
+		$('#operate_dialog').dialog('open');
+		}
+	}, "json");
+}
+</script>

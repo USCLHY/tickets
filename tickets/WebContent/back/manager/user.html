@@ -1,0 +1,157 @@
+<table id="user_data" data-options="fit:true"></table>
+
+<div id="user_search">
+	<div class="datagrid-btn-separator"></div>
+	<!-- <label class="navy_lbl">用户名：</label>
+	 
+	<select id="user_search_tid" class="navy_ipt200">
+		<option value="">--请选择--</option>
+	</select>
+	<input >-->
+	<label class="navy_lbl">用户名称：</label><input type="text" id="user_search_uname" class="navy_ipt200">
+	<label class="navy_lbl">手机号：</label><input type="text" id="user_search_utel" class="navy_ipt200">
+	<label class="navy_lbl">用户状态：</label>
+	<select id="user_search_status" class="navy_ipt200">
+		<option value="">--请选择--</option>
+		<option value="0">已冻结</option>
+		<option value="1">可用</option>
+	</select>
+	<a href="javascript:searchuserInfo()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+</div>
+
+<div id="user_dialog" class="easyui-dialog" data-options="resizable:true, model:true, closed:true">
+<form id="user_form">
+	<ul>
+		<li><label>用户编号：</label><input id="user_dialog_uid" class="navy_slt400" /></li>
+		<li><label for="user_dialog_uname">用户名称：</label><input type="text" id="user_dialog_uname" class="navy_ipt400" /></li>
+		<li>
+		<label for="user_dialog_utel">联系电话：</label><input id="user_dialog_utel" type="text" class="navy_ipt400" />
+		</li>
+		<li><label for="user_dialog_uemail">用户邮箱：</label><input type="text" id="user_dialog_uemail" class="navy_ipt400" /></li>
+		<li><label>用户头像：</label><input type="file" id="user_dialog_upic" name="upic" multiple="multiple" onchange="setImagePreviews(this, 'show_user_dialog_upic')"/></li>
+		<li id="show_user_dialog_upic"></li>
+	</ul>
+</form>
+
+<div id="show_user_dialog_upic"></div>
+</div>
+
+<style>
+#user_form li{
+	list-style-type: none;
+	margin-top: 20px;
+}
+
+#user_form li> label{
+	width: 100px;
+	display: inline-block;
+	text-align: right;
+}
+
+#show_user_dialog_upic{
+	border:2px solid #ccc;
+	width: 400px;
+	height: 500px;
+	position: absolute;
+	top: 50px;
+	right: 50px;
+
+}
+</style>
+
+<script> 
+var user_types;
+var user_obj;
+
+$(function(){
+	showuserDataGrid();
+})
+
+function showuserDataGrid(){
+	user_obj = $('#user_data').datagrid({
+		url:'../../UsersServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:10,
+		pageList:[10,15,20,25,50,100],
+		sortName:"uid",
+		remoteSort:false,
+		columns:[[
+			{field:'uid', title:'用户编号', width:50, align:'center',sortable:'true'},
+			{field:'uname', title:'用户名称', width:70, align:'center', editor:{type:"text"}},
+			{field:'utel',title:'联系方式',width:100, align:'center', editor:{type:"text"}},
+			{field:'status', title:'类型状态', width:60, align:'center',
+				formatter:function(val, row, index){
+				if(val == 0){
+					return '<font color="red">已冻结</font>';
+				}else{
+					return '<font color="green">可用</font>';
+				}
+			} },
+			{field:'_operator', title:'操作', width:40, align:'center', formatter:function(val, row, index){
+				if(row.status == 1){
+					return '<a href="javascript:updateUserStatus(' + row.uid + ',' + row.status +')" class="navy-icon-edit">冻结</a>&nbsp;<a href="javascript:showuserInfoDetail('+ row.uid +')" class="navy-icon-detail">详细</a>';
+				}else{
+					return '<a href="javascript:updateUserStatus(' + row.uid + ',' + row.status +')" class="navy-icon-edit">解冻</a>&nbsp;<a href="javascript:showuserInfoDetail('+ row.uid +')" class="navy-icon-detail">详细</a>';
+				}
+			}}
+		]],
+		toolbar: "#user_search"
+	});
+}
+function searchuserInfo(){
+	var uname = $('#user_search_uname').val(); 
+	var utel = $('#user_search_utel').val();
+	var status = $('#user_search_status').val();
+		user_obj.datagrid({
+			url:"../../UsersServlet/lhyfindByCondition",
+			queryParams:{ uname:uname, utel:utel, status:status}
+		})
+}
+function updateUserStatus(uid, status){
+	$.post("../../UsersServlet/lhyupdateStatus", {uid:uid, status:status}, data=>{
+		if(data.code == 200){
+			console.info(data);
+			user_obj = "";
+			showuserDataGrid();
+		}
+	})
+}
+function showuserInfoDetail(uid){
+	$.post("../../UsersServlet/lhyfindByUid", { uid:uid}, data=>{
+		if(data.code == 200){
+			data = data.data;//这里是data.data，因为传过来的是一个名为data的Json对象，但是真正要取的是里面的data.data
+		//将响应数据渲染到弹框中
+		$("#user_dialog_uid").val(data.uid);
+		$("#user_dialog_uname").val(data.uname);
+		$("#user_dialog_utel").val(data.utel);
+		$("#user_dialog_uidentify").val(data.uidentify);
+		$("#user_dialog_uemail").val(data.uemail);
+		$("#user_dialog_STATUS").val(data.STATUS);
+	
+		var imgStr = "<img src='../../" + data.upic + "' width='400px' height='500px' />";
+		$("#show_user_dialog_upic").html("").append($(imgStr));
+		$('#user_dialog').dialog({
+			title: '用户详情信息',
+			fit:true,
+			buttons:[
+				{
+					text:"关闭",
+					iconCls:"icon-cancel",
+					handler:function(){
+						$('#user_dialog').dialog('close')
+					}
+				}
+			]
+		});
+		
+		$('#user_dialog').dialog('open');
+		}
+	}, "json");
+}
+</script>

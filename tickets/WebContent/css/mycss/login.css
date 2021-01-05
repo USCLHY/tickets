@@ -1,0 +1,46 @@
+* {
+	margin: 0 auto;
+	padding: 0;
+}
+body {
+	background-image: url(../../images/img-64adcb22735bae18e8ded7f79644a892.jpg);
+}
+#container {
+	margin-top: 50px;
+	background-color: white;
+	/* height: 600px; */
+}
+#container>form {
+	margin-left: 200px;
+	margin-top: 50px;
+}
+#register { 
+	margin-left: 90px;
+}
+#cancel {
+	margin-left: 150px;
+}
+#errorInfo {
+	margin-left: 50px;
+	margin-top: 20px;
+	width: 500px;
+	height: 30px;
+	line-height: 30px;
+	color: red;
+}
+#close_btn {
+	position: relative;
+	left: -400px;
+	top: -40px;
+}
+
+
+/* 注册 */
+.my_p {
+	text-align: center;
+	width: 100%;
+	height: 50px;
+	line-height: 50px;
+	font-size: 20px;
+	font-weight: 700;
+}

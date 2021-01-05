@@ -1,0 +1,246 @@
+<table id="admin_data" data-options="fit:true"></table>
+
+<div id="admin_search">
+	<a href="javascript:sortByStatus()" class="easyui-linkbutton" style='float:left'>按照类型排序</a>
+	<a href="javascript:showAddAdminInfoDialog()" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style='float:left'>添加</a>
+	<div class="datagrid-btn-separator"></div>
+	<label class="navy_lbl">管理员名称：</label><input type="text" id="admin_search_aname" class="navy_ipt200">
+	<label class="navy_lbl">管理员邮箱：</label><input type="text" id="admin_search_aemail" class="navy_ipt200">
+	<label class="navy_lbl">管理员类型：</label>
+	<select id="admin_search_status" class="navy_ipt200">
+		<option value="">--请选择--</option>
+		<option value="0">普通管理员</option>
+		<option value="1">系统管理员</option>
+	</select>
+	<a href="javascript:searchadminInfo()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+</div>
+
+<div id="admin_dialog" class="easyui-dialog" data-options="resizable:true, model:true, closed:true">
+<form id="admin_form">
+	<ul>
+		<li><label>管理员编号：</label><input id="admin_dialog_aid" class="register-input" /></li>
+		<li>
+		<label for="admin_dialog_aname">管理员名称：</label><input type="text" id="admin_dialog_aname" class="register-input" onblur="checkName(this, '#check_admin_aname')"/>
+		<span id="check_admin_aname" class="tishi">管理员名以字母或汉字开头，由3-18位的数字、字母、下划线、汉字组成</span>
+		</li>
+		<li>
+		<label for="admin_dialog_aemail">管理员邮箱：</label><input type="text" id="admin_dialog_aemail" class="register-input" onblur="checkEmail(this, '#check_admin_aemail')"/>
+		<span id="check_admin_aemail" class="tishi">请填写常用电子邮箱</span>
+		</li>
+		<li>
+		<label for="admin_dialog_apassword">管理员密码：</label><input type="password" id="admin_dialog_apassword" class="register-input" onblur="checkPwd(this, '#check_admin_apassword')"/>
+		<span id="check_admin_apassword" class="tishi">密码由6-16位的数字、字母、下划线组成</span>
+		</li>
+		<li><label for="admin_dialog_status">管理员类型：</label>
+		<select id="admin_dialog_status" >
+			<option value="">--请选择--</option>
+			<option value="0">普通管理员</option>
+			<option value="1">系统管理员</option>
+		</select>
+		</li>
+	</ul>
+</form>
+</div>
+
+<style>
+#admin_form li{
+	list-style-type: none;
+	margin-top: 20px;
+}
+
+#admin_form li> label{
+	width: 100px;
+	display: inline-block;
+	text-align: right;
+}
+</style>
+
+<script>
+var admin_types;
+var admin_obj;
+
+$(function(){
+	showadminDataGrid();
+})
+
+function showadminDataGrid(){
+	admin_obj = $('#admin_data').datagrid({
+		url:'../../AdminServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:5,
+		pageList:[5,10,15,20,25,50],
+		sortName:"aid",
+		remoteSort:false,
+		columns:[[
+			{field:'aid', title:'管理员编号', width:50, align:'center',sortable:'true'},
+			{field:'aname', title:'管理员名称', width:70, align:'center', editor:{type:"text"}},
+			{field:'aemail',title:'邮箱',width:100, align:'center', editor:{type:"text"}},
+			{field:'status', title:'管理员类型', width:60, align:'center',
+				formatter:function(val, row, index){
+				if(val == 0){
+					return '<font color="red">普通管理员</font>';
+				}else{
+					return '<font color="green">系统管理员</font>';
+				}
+			} },
+			{field:'_operator', title:'操作', width:40, align:'center', formatter:function(val, row, index){
+				if(row.status == 1){
+					return '<a href="javascript:showadminInfoDetail('+ row.aid +')" class="navy-icon-detail">详细</a>';
+				}else{
+					return '<a href="javascript:updateadminStatus(' + row.aid + ',' + row.status +')" class="navy-icon-edit">升级</a>&nbsp;<a href="javascript:showadminInfoDetail('+ row.aid +')" class="navy-icon-detail">详细</a>';
+				}
+			}}
+		]],
+		toolbar: "#admin_search"
+	});
+}
+function sortByStatus(){
+	admin_obj.datagrid({
+		sortName:"../../AdminServlet/lhysortByStatus", 
+		sortName:"status"
+	})
+	admin_obj.datagrid("reload");
+}
+function searchadminInfo(){
+	var aname = $('#admin_search_aname').val(); 
+	var aemail = $('#admin_search_aemail').val();
+	var status = $('#admin_search_status').val();
+		admin_obj.datagrid({
+			url:"../../AdminServlet/lhyfindByCondition",
+			queryParams:{ aname:aname, aemail:aemail, status:status}
+		})
+}
+function updateadminStatus(aid, status){
+	$.post("../../AdminServlet/lhyupdateStatus", {aid:aid, status:status}, data=>{
+		if(data.code == 200){
+			showadminDataGrid();
+		}
+	})
+}
+function showadminInfoDetail(aid){
+	$("#admin_dialog li:first").css("display", "");
+	$("#check_admin_aname").css("display", "none");
+	$("#check_admin_aemail").css("display", "none");
+	$("#check_admin_apassword").css("display", "none");
+	$.post("../../AdminServlet/lhyfindByAid", { aid:aid}, data=>{
+		if(data.code == 200){
+			data = data.data;//这里是data.data，因为传过来的是一个名为data的Json对象，但是真正要取的是里面的data.data
+		//将响应数据渲染到弹框中
+		$("#admin_dialog_aid").val(data.aid);
+		$("#admin_dialog_aname").val(data.aname);
+		$("#admin_dialog_aemail").val(data.aemail);
+		$("#admin_dialog_status").val(data.status);
+		$("#admin_dialog_apassword").val(data.apassword);
+		$('#admin_dialog').dialog({
+			title: '管理员详情信息',
+			fit:true,
+			buttons:[
+				{
+					text:"关闭",
+					iconCls:"icon-cancel",
+					handler:function(){
+						$('#admin_dialog').dialog('close')
+					}
+				}
+			]
+		});
+		
+		$('#admin_dialog').dialog('open');
+		}
+	}, "json");
+}
+function checkName(uname, check){
+	var uname = $(uname).val();
+	var check = $(check);
+	var reg = /^[\u4e00-\u9fa5|a-z|A-Z][\w|\u4e00-\u9fa5]{2,17}$/;
+	if(!reg.test(uname)){
+		check.attr("class", "err");
+		check.html("管理员名称格式不正确！");
+	}else{
+		check.attr("class", "ok");
+		check.html("管理员名称验证成功！");
+	}
+}
+function checkEmail(aemail, check){
+	var aemail = $(aemail).val();
+	var check = $(check);
+	var reg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/i;
+	if(!reg.test(aemail)){
+		check.attr("class", "err");
+		check.html("邮箱格式不正确！");
+	}else{
+		check.attr("class", "ok");
+		check.html("邮箱验证成功！");
+	}
+}
+function checkPwd(pwd, check){
+	var pwd = $(pwd).val();
+	var check = $(check);
+	var reg = /^\w{6,16}$/;
+	if(!reg.test(pwd)){
+		check.attr("class", "err");
+		check.html("密码格式不正确！");
+	}else{
+		check.attr("class", "ok");
+		check.html("密码验证成功！");
+	}
+}
+function showAddAdminInfoDialog(){
+	$("#admin_dialog li:first").css("display", "none");
+	$("#check_admin_aname").css("display", "");
+	$("#check_admin_aemail").css("display", "");
+	$("#check_admin_apassword").css("display", "");
+	$("#admin_dialog span").attr("class", "tishi");
+	$("#check_admin_aname").text("管理员名以字母或汉字开头，由3-18位的数字、字母、下划线、汉字组成");
+	$("#check_admin_aemail").text("请填写常用电子邮箱");
+	$("#check_admin_apassword").text("密码由6-16位的数字、字母、下划线组成");
+	//将弹框信息清空
+	$("#admin_form")[0].reset();
+	//获取添加按钮
+	$("#admin_dialog").dialog({
+		title: '添加管理员',
+		fit: true,
+		buttons:[
+			{
+				text:"添加",
+				iconCls:"icon-add",
+				handler:function(){
+					//获取表单信息
+					var aname = $("#admin_dialog_aname").val();
+					var aemail = $("#admin_dialog_aemail").val();
+					var apassword = $("#admin_dialog_apassword").val();
+					var status = $("#admin_dialog_status").val();
+					console.log(aemail);
+					//发送请求
+					$.post("../../AdminServlet/lhyadd", {aname:aname, aemail:aemail, apassword:apassword, status:status}, data=>{
+						if(data.code == 200){
+							admin_obj.datagrid("reload");
+							$("#admin_dialog").dialog("close");
+							$.messager.show({title:"成功提示", msg:"管理员信息添加成功...", timeout:2000, showType:"slide"});
+						}else{
+							admin_obj.datagrid("reload");
+							$("#admin_dialog").dialog("close");
+							$.messager.show({title:"失败提示", msg:"管理员信息添加失败...", timeout:2000, showType:"slide"});
+						}
+					})
+				}
+			},
+			{
+				text:"关闭",
+				iconCls:"icon-cancel",
+				handler:function(){
+					$("#admin_dialog").dialog("close");
+				}
+			}
+		]
+	})	
+	$('#admin_dialog').dialog('open');
+	
+}
+</script>

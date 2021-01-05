@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>账号激活</title>
+<script type="text/javascript" src="../js/jquery-3.5.1.min.js"></script>
+<script type="text/javascript">
+	$( function(){
+		setInterval(() => {  
+			if ( parseInt($("#info").text()) == 1 ) {
+				location.href="../login.html" ;
+			}
+			$("#info").text( parseInt($("#info").text()) - 1 );
+		}, 1000);
+	}) ;
+</script>
+</head>
+<body>
+	<div>激活成功！<span id="info">5</span>秒后跳转到登陆界面...</div>
+</body>
+</html>

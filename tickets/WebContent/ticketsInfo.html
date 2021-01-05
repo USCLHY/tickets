@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+<title>中国铁路12307-购票详情</title>
+<link rel="shortcut icon" type=type="image/x-icons" href="images/logo.png"/>
+
+<!-- Bootstrap -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+
+<!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script src="js/jquery-3.5.1.min.js"></script>
+
+<!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script src="./js/bootstrap.min.js"></script>
+
+<!--  加载vue的js插件  -->
+<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/qs.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>  
+
+<!-- 加载获取location中参数的js  -->
+<script type="text/javascript" src="js/getParameter.js"></script>
+ 
+<style type="text/css"> 
+#navbar {
+	margin-top: 0px;
+} 
+#type {
+	margin-top: 100px;
+}
+#type ul li {
+	width: 176px;
+	text-align: center;
+	color: white;
+} 
+
+#searchTickets {
+	position: relative;
+	height: 50px;
+	top: 80px;
+	background-color: lightblue;
+	text-align: center;
+}
+#searchTickets form {
+	margin-left: 150px;
+}
+
+#searchTickets form div {
+	text-align: center;
+	padding-left: 30px;
+	margin-right: 20px;
+}
+
+#showTicketsDialog {
+	margin-top: 20px;
+} 
+
+#showTicketsDialog th {
+	width: 100px;
+	text-align: center;
+}
+
+#showTicketsDialog td {
+	text-align: center;
+	height: 50px ;
+	line-height: 50px;
+}
+
+#pageNums a {
+	margin-left: 10px;
+}
+
+#pageNums p {
+	position: relative;
+	left: 10px;
+	top: -10px;
+}
+
+.lj{
+	width: 100%;
+	height: 35%;
+	position: absolute;
+	background-color: #F8F8F8;
+	
+}
+
+.lj_z{
+	padding-top: 4%;
+}
+.z{
+	color: black;
+	padding-left: 5%;
+	padding-top: 3%;
+}
+
+.jdly_l{
+	width: 16%;
+	height: 10%;
+	margin-left: 0.5%;
+}
+.yqlj{
+	padding-top: 0.5%;
+	padding-left: 4.5%;
+}
+.z_w1{
+	padding-left: 41%;
+	margin-top: -8%;
+}
+.z_w2{
+	padding-left: 44.7%;
+	margin-top: -2%;
+	margin-left: 7%;
+}
+.z_w3{
+	padding-left: 47%;
+	margin-top: -2%;
+	margin-left: 16.5%;
+}
+.z_w4{
+	padding-left:50%;
+	margin-top: -2%;
+	margin-left: 24.7%;
+}
+.wtp{
+	padding-top: -13%;
+	padding-left: 41.5%;
+}
+.w_t{
+	width: 11%;
+	height: 11%;
+	
+}
+.w_tp{
+	width: 11%;
+	height: 11%;
+	margin-left: 7%;
+}
+.zy{
+	width: 20%;
+	height: 20%;
+}
+
+.wb{
+	width: 100%;
+	height: 12%;
+	position: absolute;
+	background-color:#666666;
+	
+}
+.wb_z{
+	padding-top: 14.4%;
+}
+.wb_zt{
+	color: gainsboro;
+}
+.wb_w{
+	padding-top: 1%;
+}
+.my{
+	width: 100%;
+	
+	
+}
+</style>
+
+</head>
+
+<body>  
+<div class="container-fluid" id="container">
+	
+	<!-- 最上方登录信息  -->
+	<nav class="navbar navbar-default navbar-fixed-top  navbar-inverse " id="navbar">
+	 <div class="container-fluid">
+	   <!-- Brand and toggle get grouped for better mobile display -->
+	   <div class="navbar-header">
+		 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+		   <th class="sr-only">Toggle navigation</th>
+		   <th class="icon-bar"></th>
+		   <th class="icon-bar"></th>
+		   <th class="icon-bar"></th>
+		 </button>
+		 <a class="navbar-brand" href="#">12307Tickets</a>
+	   </div>
+
+	   <!-- Collect the nav links, forms, and other content for toggling -->
+	   <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">  
+		 <ul class="nav navbar-nav navbar-right">
+		   <li><a href="login.html" style="border-bottom: red 1px solid;">登录</a></li>
+		   <li><a href="register.html" style="border-bottom: red 1px solid; margin-left: 5px;">注册</a></li>
+		   <li class="dropdown">
+			 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+				<span id="myInfo" style="display: inline-block;height: 15px; width: 70px; overflow: hidden; text-overflow: ellipsis;" :title="loginUser.uemail">{{ loginUser.uemail }}</span>
+				<img  :src="loginUser.upic" id="icon" style="width: 18px;height: 18px; margin-left: 2px;" class="img-circle" > 
+				<span class="caret"></span>
+			</a>
+			 <ul class="dropdown-menu">
+			 <li><a href="allorders.html">全部订单</a></li>
+			   <li><a href="refundtickets.html">我的退款</a></li>
+			   <li><a href="main.html">个人中心</a></li>
+			   <li><a href="DownLoadServlet/download?filename=下载安全条例附件.pptx">下载安全条例附件</a></li>
+			   <li><a href="DownLoadServlet/download?filename=下载购票须知附件.pptx">下载购票须知附件</a></li>
+			   <li role="separator" class="divider"></li>
+			   <li><a href="javascript:void(0)" @click="reback">退出登录</a></li>
+			 </ul>
+		   </li>
+		 </ul>
+	   </div><!-- /.navbar-collapse -->
+	 </div><!-- /.container-fluid -->
+	</nav>
+
+	<!--  查询导航栏  -->
+	<div id="searchTickets">
+		<form class="navbar-form navbar-left" role="search" style="text-align: center;">
+		  <div class="form-group">
+			<label for="startsite">出发站 : </label>
+			<input type="text" id="startsite" v-model="startsite"  class="form-control" placeholder="Startsite">
+		  </div>
+		  <div class="form-group">
+			<label for="endsite">终点站 : </label>
+			<input type="text" id="endsite" v-model="endsite" class="form-control" placeholder="Endsite">
+		  </div>
+		  <div class="form-group">
+		    <label for="starttime">出发日期 : </label>
+			<input type="text" id="starttime" v-model="starttime" class="form-control" placeholder="Starttime">
+		  </div>
+		  <button type="button" class="btn btn-success" onclick="findByPage(1)" >查&nbsp;&nbsp;询</button>
+		</form> 
+	</div>
+
+	<!-- 导航栏 -->
+	<div id="type" >
+	   <ul class="nav nav-tabs">
+		 <li role="presentation"><a href="index.html">首页</a></li>
+		 <li role="presentation" v-for=" item in train_type" :title="item.tid" @click="findByType( item.tid )"><a href="javascript:void(0)">{{ item.tname }}</a></li> 
+	   </ul>
+	</div>
+		
+	<!--  票的详情展示  -->
+	<div id="showTicketsDialog">  
+		<table class="table table-hover">
+		  <tr>
+		  	<th>车次</th>
+		  	<th>出发站</th>
+		  	<th>到达站</th>
+		  	<th>出发时间</th>
+		  	<th>到达时间</th>
+		  	<th>历时(/min)</th>
+		  	<th>软卧</th>
+		  	<th>硬卧</th>
+		  	<th>软座</th>
+		  	<th>硬座</th>
+		  	<th>站票</th>
+		  	<th>日期</th>
+		  	<th>备注</th>
+		  	<th>操作</th>  
+		  </tr>
+		  <tr v-for=" (item,index) in tickets.list ">
+		  	<td>{{ item.tname }}</td>
+		  	<td>{{ item.startsite }}</td>
+		  	<td>{{ item.endsite }}</td>
+		  	<td>{{ item.starttime }}</td>
+		  	<td>{{ item.endtime }}</td>
+		  	<td>{{ item.duration }}</td>
+		  	<td>{{ item.rworemain }}</td>
+		  	<td>{{ item.rzuoremain }}</td>
+		  	<td>{{ item.yworemain }}</td>
+		  	<td>{{ item.yzuoremain }}</td>
+		  	<td>{{ item.zhanremain }}</td>
+		  	<td>{{ item.date }}</td>
+		  	<td v-if="item.status=1">正常</td>
+		  	<td v-else>晚点</td>
+		  	<td>
+				<button type="button" :id=" 'reserve' + index" @click="reserve('reserve' + index,item.oid)" class="btn btn-primary"  data-toggle="modal" >预订</button>
+			</td>  
+		  </tr> 
+		</table> 
+	</div>
+	
+	<!-- 分页条 -->
+	<nav aria-label="Page navigation" id="pageNums">
+	  <ul class="pagination"> </ul>
+	  <p>查询到{{ tickets.totalCount }}条记录，共{{ tickets.totalPage }}页</p>
+	</nav> 
+	
+	<!-- 模态框 -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title">提示信息</h4>
+	      </div>
+	      <div class="modal-body">
+	        <p>请先登录&hellip;</p>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	        <button type="button" class="btn btn-primary" onclick="goLogin()">Enter</button>
+	      </div>
+	    </div><!-- /.modal-content -->
+	  </div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+	
+	<!--链接区-->
+	<div class="lj_z">
+		   <div class="lj" >
+				<p class="z">友情链接</p>
+				<div class="yqlj">
+				   	<img src="images/l-1.jpg" alt="" class="jdly_l">
+				   	<img src="images/l_2.jpg" alt="" class="jdly_l">
+				</div>
+				<div class="yqlj">
+				   	<img src="images/l_3.jpg" alt="" class="jdly_l">
+				   	<img src="images/l_4.jpg" alt="" class="jdly_l">
+				</div>
+				<p class="z_w1">中国铁路官方微信</p>
+				<p class="z_w2">中国铁路官方微博</p>
+				<p class="z_w3">12307公众号</p>
+				<p class="z_w4">铁路12307</p>
+				<div class="wtp">
+					<img src="images/w_1.jpg" alt="" class="w_t">
+					<img src="images/w_2.jpg" alt="" class="w_tp">
+					<img src="images/w_2.jpg" alt="" class="w_tp">
+					<img src="images/w_2.jpg" alt="" class="w_tp">
+					<img src="images/zy.jpg" alt="" class="zy">
+				</div>
+				
+		   </div>
+	</div>
+	<div class="wb_z">
+		   <div class="wb">
+			   <center class="wb_w">
+				   <p class="wb_zt">版权所有©2008-2020&nbsp;&nbsp;源辰12307小组</p>
+				   <p class="wb_zt">京ICP备05020493号-4&nbsp;&nbsp;|&nbsp;&nbsp;ICP证：京B2-20202537</p>
+			   </center>
+			   
+		   </div>
+	</div>
+  
+</div> 
+   
+<script type="text/javascript">  
+let app = new Vue({
+	el:"#container" ,
+	data: {
+		 tid : "" ,
+		 loginUser : [] , // 登录的用户
+		 train_type : [],  // 所有的类型
+		 page : "" , // 当前的页数
+		 startsite : "" , // 出发站
+		 endsite : "" , // 终点站 
+		 starttime : "" ,  // 出发日期
+		 tickets : []
+	} ,
+	mounted : function(){  
+		// 表格第一行显示颜色 
+		$("table tr:first").css("backgroundColor","lightblue") ;   
+		
+		// 显示当前登录用于信息
+		axios.post( "UsersServlet/showUser" ,qs.stringify({})).then( rt => { 
+			if( rt.status == 200 ) {
+				if( rt.data == null ){
+					this.loginUser = "" ;
+					return ;
+				}
+				this.loginUser = rt.data ;
+			}
+		}) ;
+		 
+		// 获取类型id
+		this.tid = getParameter( "tid" ) ;   
+		this.startsite = decodeURI(getParameter( "startsite" ) );   
+		this.endsite =decodeURI( getParameter( "endsite" ) );   
+		this.starttime = getParameter( "date" ) ;   
+		 
+		// 查询车票类型并显示
+		axios.post( "TrainTypeServlet/findAll" , qs.stringify({})).then( rt => {
+			if( rt.status == 200 && rt.data.code == 200 ){
+				this.train_type = rt.data.data ; 
+				
+				this.$nextTick(function(){
+					$("#type li[class='active']").removeClass("active") ;
+					$("#type li[title='"+this.tid+"']").addClass("active") ;
+				});
+			}
+		}) ;   
+		
+		// 通过查询票
+		axios.post( "OperateServlet/findByType" , qs.stringify({ tid:this.tid,startsite:this.startsite,endsite:this.endsite,date:this.starttime }) ).then( rt => {
+			 
+			if( rt.status == 200 && rt.data.code ==200 ){ 
+				this.tickets = rt.data.data ; 
+				console.info( this.tickets );
+				
+				var strs = '<li id="firstPage" onclick="findByfirstPage()"><a href="javascript:void(0)">首页</a></li><li id="lastPage" onclick="findBylastPage()">'
+							+ '<a href="javascript:void(0)" aria-label="Previous"><span aria-hidden="true">&laquo;</span> </a></li>' ;
+				
+				if ( this.tickets.totalPage > 10 ) {
+					for (var i = 0; i < 10 ; i++) { 
+						if ( i == 0 ) { 
+							strs += '<li class="active" onclick="findByPage('+ (i+1) +') " title='+(i+1) +'><a href="javascript:void(0)">'+ (i+1) +'</a></li> ' ;
+						}else { 
+							strs += '<li onclick="findByPage('+ (i+1) +') " title='+(i+1) +'><a href="javascript:void(0)">'+ (i+1) +'</a></li> ' ;
+						} 
+					} 
+				}else {
+					for (var i = 0; i < this.tickets.totalPage ; i++) { 
+						if ( i == 0 ) { 
+							strs += '<li class="active" onclick="findByPage('+ (i+1) +') " title='+(i+1) +'><a href="javascript:void(0)">'+ (i+1) +'</a></li> ' ;
+						}else { 
+							strs += '<li onclick="findByPage('+ (i+1) +') " title='+(i+1) +'><a href="javascript:void(0)">'+ (i+1) +'</a></li> ' ;
+						} 
+					} 
+				} 	
+				
+				strs += '<li id="nextPage" onclick="findBynextPage()"><a href="javascript:void(0)" aria-label="Next"><span aria-hidden="true">&raquo;</span>'
+						+ '</a></li><li id="endPage" onclick="findByendPage()"><a href="javascript:void(0)">末页</a></li> ' ;
+						
+				$("#pageNums ul").append( $(strs) );
+						
+
+				if( this.tickets.currentPage <= 1 ){
+					$("#firstPage").addClass("disabled") ;
+					$("#lastPage").addClass("disabled") ;
+				}
+				if ( this.tickets.currentPage >= this.tickets.totalPage ) {
+					$("#endPage").addClass("disabled") ;
+					$("#nextPage").addClass("disabled") ;
+				}
+				  
+			}
+		}) ;
+	} ,
+	methods : {
+		// 退出登录
+		reback : function() {
+			axios.post("UsersServlet/reback" , qs.stringify({ })).then( rt => {
+				if ( rt.status == 200 && rt.data.code == 200 ) {
+					this.loginUser = "" ;
+					location.reload();
+				} 
+			});
+		} , 
+		
+		// 点击导航栏导航栏，通过类型id查询
+		findByType : function( tid ){
+			
+			// 将当前选择的类型保存起来
+			this.tid = tid ;
+			
+			$("#type li[class='active']").removeClass("active") ;
+			$("#type li[title='"+ tid +"']").addClass("active") ; 
+		 
+			// 获取出发站
+			var startsite = $("#startsite").val() ;
+			// 获取到达站
+			var endsite =  $("#endsite").val() ;
+			// 获取出发日期
+			var date =  $("#starttime").val() ;
+			
+			axios.post( "OperateServlet/findByType" , qs.stringify({ tid:tid,page:1,startsite:startsite,endsite:endsite,date:date}) ).then( rt => {
+				if( rt.status == 200 && rt.data.code ==200 ){
+					this.tickets = rt.data.data ; 
+					
+					myFind( 1 ); 
+				}
+			}) ;
+		},
+		// 预订
+		reserve : function( id , oid ){
+			if ( this.loginUser == "" || this.loginUser == null ) {   
+				$("#" + id ).attr("data-target","#myModal") ; 
+			}else {
+				location.href = "UserInfo.html?oid=" + oid  ;
+			}
+		}
+	}
+}); 
+
+//下一页
+function findBynextPage(){
+	
+	var page = $("#pageNums li[class='active']").text(); 
+	if ( page >= app.$data.tickets.totalPage ) {
+		return ;
+	}
+	app.$data.page = page +1; 
+	 
+	$("#pageNums li[class='active']").removeClass("active");  
+	$("#pageNums li[title='"+(parseInt( page) + 1) +"']").addClass("active"); 
+	
+	
+	
+	myFind(parseInt( page) + 1);
+}
+
+// 末页
+function findByendPage(){
+	app.$data.page = app.$data.tickets.totalPage ;
+	
+	var page = app.$data.tickets.totalPage ; 
+	
+	$("#pageNums li[class='active']").removeClass("active");  
+	$( "#pageNums li[title='"+ page +"']"  ).addClass("active"); 
+	
+	myFind( page );
+}
+
+// 上一页
+function findBylastPage(){
+	
+	var page = $("#pageNums li[class='active']").text(); 
+	if ( page <= 1 ) {
+		return ;
+	}
+	app.$data.page = page -1;
+	
+	$("#pageNums li[class='active']").removeClass("active");  
+	$( "#pageNums li[title='"+ (page-1) +"']"  ).addClass("active"); 
+	
+	myFind( page -1 );
+}
+
+// 首页
+function findByfirstPage(){
+	app.$data.page = 1 ;
+	
+	$("#pageNums li[class='active']").removeClass("active");  
+	$( "#pageNums li[title='1']"  ).addClass("active"); 
+	
+	myFind( 1 );
+}
+
+//点击分页条的条件查询
+function findByPage( page ){   
+	app.$data.page = page ; 
+	
+	myFind( page );
+}
+
+
+function myFind( page ){  
+	// 获取类型id
+	var tid = $("#type li[class='active']").attr("title") ;
+	// 获取出发站
+	var startsite = $("#startsite").val() ;
+	// 获取到达站
+	var endsite =  $("#endsite").val() ;
+	// 获取出发日期
+	var date =  $("#starttime").val() ; 
+	
+	axios.post( "OperateServlet/findByType" , qs.stringify({ tid:tid,page:page,startsite:startsite,endsite:endsite,date:date }) ).then( rt => {
+		if( rt.status == 200 && rt.data.code ==200 ){ 
+			app.$data.tickets = rt.data.data ;
+			
+			$("#pageNums ul").html("");   
+			var strs = '<li id="firstPage" onclick="findByfirstPage()"><a href="javascript:void(0)">首页</a></li><li id="lastPage" onclick="findBylastPage()">'
+				+ '<a href="javascript:void(0)" aria-label="Previous"><span aria-hidden="true">&laquo;</span> </a></li>' ;
+		 
+			var startPage = 0 ;
+			var endPage = 0 ;
+				
+			// 当页数大于10的情况
+			if ( app.$data.tickets.totalPage > 10 ) {
+				if ( page <= 6 ) {
+					startPage = 0 ;
+					endPage = 10 ;
+				}else if( page >= app.$data.tickets.totalPage -4  ){
+					startPage = app.$data.tickets.totalPage - 10 ;
+					endPage = app.$data.tickets.totalPage ;
+				}else {
+					startPage = page - 6 ;
+					endPage = parseInt(page) + 4 ;
+				}
+			}else {
+				startPage = 0 ;
+				endPage = app.$data.tickets.totalPage ;
+			}
+			
+			for (var i = startPage; i < endPage ; i++) { 
+				if ( (parseInt( i) + 1 ) == page ) { 
+					strs += '<li class="active" onclick="findByPage('+ (i+1) +') " title='+(i+1) +'><a href="javascript:void(0)">'+ (i+1) +'</a></li> ' ;
+				}else { 
+					strs += '<li onclick="findByPage('+ (i+1) +') " title='+(i+1) +'><a href="javascript:void(0)">'+ (i+1) +'</a></li> ' ;
+				} 
+			} 
+			
+			strs += '<li id="nextPage" onclick="findBynextPage()"><a href="javascript:void(0)" aria-label="Next"><span aria-hidden="true">&raquo;</span>'
+				+ '</a></li><li id="endPage" onclick="findByendPage()"><a href="javascript:void(0)">末页</a></li> ' ;
+				
+			$("#pageNums ul").append( $(strs) ); 
+		 
+			
+			// 上一页和下一页等的不可用的情况
+			if( page <= 1 ){ 
+				$("#firstPage").addClass("disabled") ;
+				$("#lastPage").addClass("disabled") ; 
+			}else {
+				$("#lastPage").removeClass("disabled") ;
+				$("#firstPage").removeClass("disabled") ;
+			}
+			if ( page >= app.$data.tickets.totalPage ) {
+				$("#endPage").addClass("disabled") ;
+				$("#nextPage").addClass("disabled") ; 
+			}else {
+				$("#endPage").removeClass("disabled") ;
+				$("#nextPage").removeClass("disabled") ;
+			}
+		}
+	}) ;
+}
+
+function goLogin(){
+	location.href = "login.html" ;
+}
+ 
+</script>
+
+</body>
+</html>

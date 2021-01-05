@@ -1,0 +1,18 @@
+h2 {
+	text-align: center;
+}
+.leftdiv {
+	float: left;
+	margin: 10px;
+}
+.rightdiv {
+	float: right;
+	margin: 10px;
+}
+table {
+	text-align: center;
+}
+table th {
+	text-align: center;
+}
+ 

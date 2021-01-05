@@ -1,0 +1,348 @@
+<table id="trainnumber_data" data-options="fit:true"></table>
+
+<div id="trainnumber_search">
+	<a href="javascript:showAddTrainNumberInfoDialog()" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style='float:left'>添加</a>
+	<div class="datagrid-btn-separator"></div>
+	<label class="navy_lbl">列车名称：</label><input type="text" id="trainnumber_search_tname" class="navy_ipt200">
+	<label class="navy_lbl">列车类型：</label>
+	<!-- <input type="text" id="trainnumber_search_type" class="navy_ipt200"> -->
+	<select id="trainnumber_search_typename" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	</select>
+	
+	<label class="navy_lbl">起点：</label>
+	<!-- <input type="text" id="trainnumber_search_start" class="navy_ipt200"> -->
+	<select id="trainnumber_search_startname" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	</select>
+	<label class="navy_lbl">终点：</label>
+	<!-- <input type="text" id="trainnumber_search_end" class="navy_ipt200"> -->
+	<select id="trainnumber_search_endname" class="navy_ipt_200">
+	<option value="">--请选择--</option>
+	</select>
+	<a href="javascript:searchtrainnumberInfo()" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+</div>
+
+<div id="trainnumber_dialog" class="easyui-dialog" data-options="resizable:true, model:true, closed:true">
+<form id="trainnumber_form">
+	<ul>
+		<li><label>列车编号：</label><input id="trainnumber_dialog_tid" class="navy_slt400" /></li>
+		<li><label for="trainnumber_dialog_tname">列车名：</label><input type="text" id="trainnumber_dialog_tname" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_type">列车类别：</label>
+		<select id="trainnumber_dialog_type" class="navy_ipt_400">
+		<option value="">--请选择--</option>
+		</select>
+		</li>
+		<li><label for="trainnumber_dialog_start">起始站点：</label>
+		<select id="trainnumber_dialog_start" class="navy_ipt_400">
+		<option value="">--请选择--</option>
+		</select>
+		</li>
+		<li><label for="trainnumber_dialog_end">终止站点：</label>
+		<select id="trainnumber_dialog_end" class="navy_ipt_400">
+		<option value="">--请选择--</option>
+		</select>
+		</li>
+		<li><label for="trainnumber_dialog_duration">所需时长：</label><input type="text" id="trainnumber_dialog_duration" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_rwo">软卧总数量：</label><input type="text" id="trainnumber_dialog_rwo" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_rwoprice">软卧价格：</label><input type="text" id="trainnumber_dialog_rwoprice" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_rzuo">软座总数量：</label><input type="text" id="trainnumber_dialog_rzuo" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_rzuoprice">软座价格：</label><input type="text" id="trainnumber_dialog_rzuoprice" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_ywo">硬卧总数量：</label><input type="text" id="trainnumber_dialog_ywo" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_ywoprice">硬卧价格：</label><input type="text" id="trainnumber_dialog_ywoprice" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_yzuo">硬座总数量：</label><input type="text" id="trainnumber_dialog_yzuo" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_yzuoprice">硬座价格：</label><input type="text" id="trainnumber_dialog_yzuoprice" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_zhan">站票总数量：</label><input type="text" id="trainnumber_dialog_zhan" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_zhanprice">站票价格：</label><input type="text" id="trainnumber_dialog_zhanprice" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_wostudentprice">卧铺学生票价格：</label><input type="text" id="trainnumber_dialog_wostudentprice" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_zuostudentprice">座铺学生票价格：</label><input type="text" id="trainnumber_dialog_zuostudentprice" class="navy_ipt400" /></li>
+		<li><label for="trainnumber_dialog_status">车次状态：</label><input type="text" id="trainnumber_dialog_status" class="navy_ipt400" /></li>
+	</ul>
+</form>
+</div>
+
+<style>
+#trainnumber_form li{
+	list-style-type: none;
+	margin-top: 20px;
+}
+
+#trainnumber_form li> label{
+	width: 100px;
+	display: inline-block;
+	text-align: right;
+}
+</style>
+
+<script>
+var trainnumber_types;
+var trainnumber_sites;
+var trainnumber_obj;
+
+$(function(){
+	var str;
+	//将车次类型和站点名称渲染到选择框
+	$.post("../../TrainTypeServlet/lhyfinds", {}, data=>{
+		trainnumber_types = data;
+		str = '<option value="">--请选择--</option>';
+		$.each(data.rows, function(index, item){
+			str += '<option value="'+ item.tid +'">' + item.tname +'</option>';
+		})
+		$("#trainnumber_search_typename").html("").append($(str));
+		$("#trainnumber_dialog_type").html("").append($(str));
+	}, "json")
+	$.post("../../SiteServlet/lhyfinds", {}, data=>{ 
+		trainnumber_sites = data;
+		str = '<option value="">--请选择--</option>';
+		$.each(data.rows, function(index, item){
+			str += '<option value="'+ item.sid +'">'+ item.sname +'</option>';
+		}, "json")
+		$("#trainnumber_search_startname").html("").append($(str));
+		$("#trainnumber_search_endname").html("").append($(str));
+		$("#trainnumber_dialog_end").html("").append($(str));
+		$("#trainnumber_dialog_start").html("").append($(str));
+	}, "json")
+	//显示表格
+	showtrainnumberDataGrid();
+})
+
+function showtrainnumberDataGrid(){
+	trainnumber_obj = $('#trainnumber_data').datagrid({
+		url:'../../TrainNumberServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:10,
+		pageList:[10,15,20,25,50,100],
+		sortName:"tid",
+		remoteSort:false,
+		columns:[[
+			{field:'tid', title:'列车编号', width:50, align:'center',sortable:'true'},
+			{field:'tname', title:'列车名称', width:70, align:'center', editor:{type:"text"}},
+			{field:'typename',title:'车次类型',width:100, align:'center', editor:{type:"text"}},
+			{field:'startname',title:'起始站点',width:100, align:'center', editor:{type:"text"}},
+			{field:'endname',title:'终止站点',width:100, align:'center', editor:{type:"text"}},
+			{field:'_operator', title:'操作', width:100, align:'center', formatter:function(val, row, index){
+				return '<a href="javascript:showUpdateTrainNumberInfoDialog('+ row.tid +')" class="navy-icon-edit">修改</a>&nbsp;<a href="javascript:showTrainNumberInfoDetail('+ row.tid +')" class="navy-icon-detail">详细</a>';
+			}},
+			{field:'status', title:'修改状态', width:80, align:'center', formatter:function(val, row, index){
+				if(val == 0){
+					return '<a href="javascript:updatetrainnumberStatus('+ row.tid + "," + row.status + ')" class="navy-icon-edit">恢复营业</a>';
+				}else{
+					return '<a href="javascript:updatetrainnumberStatus('+ row.tid + "," + row.status + ')" class="navy-icon-edit">暂停营业</a>';
+				}
+			}}
+		]],
+		toolbar: "#trainnumber_search"
+	});
+}
+function searchtrainnumberInfo(){
+	var tname = $('#trainnumber_search_tname').val(); 
+	var typeid = $('#trainnumber_search_typename').val();
+	var startname = $('#trainnumber_search_startname').val();
+	var endname = $('#trainnumber_search_endname').val();
+		trainnumber_obj.datagrid({
+			url:"../../TrainNumberServlet/lhyfindByCondition",
+			queryParams:{  tname:tname, typeid:typeid, startsite:startname, endsite:endname}
+		})
+}
+function updatetrainnumberStatus(tid, status){
+	$.post("../../TrainNumberServlet/lhyupdateStatus", { tid:tid, status:status}, data=>{
+		if(data.code == 200){
+			console.info(data);
+			showtrainnumberDataGrid();
+		}
+	}, "json")
+}
+function showTrainNumberInfoDetail(tid){
+	$("#trainnumber_form ul li select").attr("disabled", true);
+	$("#trainnumber_form ul li input").attr("readonly", true);
+	$("#trainnumber_dialog li:first").css("display", "inline");
+	$("#trainnumber_dialog li:last").css("display", "inline");
+	$.post("../../TrainNumberServlet/lhyfindByTid", { tid:tid}, data=>{
+		if(data.code == 200){
+			data = data.data;//这里是data.data，因为传过来的是一个名为data的Json对象，但是真正要取的是里面的data.data
+		//将响应数据渲染到弹框中
+		$("#trainnumber_dialog_tid").val(data.tid);
+		$("#trainnumber_dialog_tname").val(data.tname);
+		$("#trainnumber_dialog_type").val(data.typeid);
+		$("#trainnumber_dialog_start").val(data.startname);
+		$("#trainnumber_dialog_end").val(data.endname);
+		$("#trainnumber_dialog_duration").val(data.duration);
+		$("#trainnumber_dialog_rwo").val(data.rwo);
+		$("#trainnumber_dialog_rwoprice").val(data.rwoprice);
+		$("#trainnumber_dialog_rzuo").val(data.rzuo);
+		$("#trainnumber_dialog_rzuoprice").val(data.rzuoprice);
+		$("#trainnumber_dialog_ywo").val(data.ywo);
+		$("#trainnumber_dialog_ywoprice").val(data.ywoprice);
+		$("#trainnumber_dialog_yzuo").val(data.yzuo);
+		$("#trainnumber_dialog_yzuoprice").val(data.yzuoprice);
+		$("#trainnumber_dialog_zhan").val(data.zhan);
+		$("#trainnumber_dialog_zhanprice").val(data.zhanprice);
+		$("#trainnumber_dialog_wostudentprice").val(data.wostudentprice);
+		$("#trainnumber_dialog_zuostudentprice").val(data.zuostudentprice);
+		$("#trainnumber_dialog_status").val(data.status);
+		$('#trainnumber_dialog').dialog({
+			title: '管理员详情信息',
+			fit:true,
+			buttons:[
+				{
+					text:"关闭",
+					iconCls:"icon-cancel",
+					handler:function(){
+						$('#trainnumber_dialog').dialog('close')
+					}
+				}
+			]
+		});
+		
+		$('#trainnumber_dialog').dialog('open');
+		}
+	}, "json");
+}
+function showAddTrainNumberInfoDialog(){
+	$("#trainnumber_form ul li select").removeAttr("disabled");
+	$("#trainnumber_form ul li input").removeAttr("readonly");
+	//隐藏列车编号和状态
+	$("#trainnumber_form li:first").css("display", "none");
+	$("#trainnumber_form li:last").css("display", "none");
+	//将弹框信息清空
+	$("#trainnumber_form")[0].reset();
+	//获取添加按钮
+	$("#trainnumber_dialog").dialog({
+		title: '添加列车信息',
+		fit: true,
+		buttons:[
+			{
+				text:"添加",
+				iconCls:"icon-add",
+				handler:function(){
+					//获取表单信息
+					var tname = $("#trainnumber_dialog_tname").val();
+					var typeid = $("#trainnumber_dialog_type").val();
+					var startsite = $("#trainnumber_dialog_start").val();
+					var endsite = $("#trainnumber_dialog_end").val();
+					var duration = $("#trainnumber_dialog_duration").val();
+					var rwo = $("#trainnumber_dialog_rwo").val();
+					var rwoprice = $("#trainnumber_dialog_rwoprice").val();
+					var rzuo = $("#trainnumber_dialog_rzuo").val();
+					var rzuoprice = $("#trainnumber_dialog_rzuoprice").val();
+					var ywo = $("#trainnumber_dialog_ywo").val();
+					var ywoprice = $("#trainnumber_dialog_ywoprice").val();
+					var yzuo = $("#trainnumber_dialog_yzuo").val();
+					var yzuoprice = $("#trainnumber_dialog_yzuoprice").val();
+					var zhan = $("#trainnumber_dialog_zhan").val();
+					var zhanprice = $("#trainnumber_dialog_zhanprice").val();
+					var wostudentprice = $("#trainnumber_dialog_wostudentprice").val();
+					var zuostudentprice = $("#trainnumber_dialog_zuostudentprice").val();
+					//发送请求
+					$.post("../../TrainNumberServlet/lhyadd", { tname:tname, typeid:typeid, startsite:startsite, endsite:endsite, duration:duration, rwo:rwo, rwoprice:rwoprice, rzuo:rzuo, rzuoprice:rzuoprice, ywo:ywo, ywoprice:ywoprice, yzuo:yzuo, yzuoprice:yzuoprice, zhan:zhan, zhanprice:zhanprice, wostudentprice:wostudentprice, zuostudentprice:zuostudentprice, status:1}, data=>{
+						if(data.code == 200){
+							console.info(data);
+							trainnumber_obj.datagrid("reload");
+							$("#trainnumber_dialog").dialog("close");
+							$.messager.show({title:"成功提示", msg:"列车信息添加成功...", timeout:2000, showType:"slide"});
+						}else{
+							trainnumber_obj.datagrid("reload");
+							$("#trainnumber_dialog").dialog("close");
+							$.messager.show({title:"失败提示", msg:"列车信息添加失败...", timeout:2000, showType:"slide"});
+						}
+					})
+				}
+			},
+			{
+				text:"关闭",
+				iconCls:"icon-cancel",
+				handler:function(){
+					$("#trainnumber_dialog").dialog("close");
+				}
+			}
+		]
+	})	
+	$('#trainnumber_dialog').dialog('open');
+}
+function showUpdateTrainNumberInfoDialog(tid){
+	$("#trainnumber_form ul li select").removeAttr("disabled");
+	$("#trainnumber_form ul li input").removeAttr("readonly");
+	$("#trainnumber_dialog li:first").css("display", "none");
+	$("#trainnumber_dialog li:last").css("display", "none");
+	$.post("../../TrainNumberServlet/lhyfindByTid", {tid:tid}, data=>{
+		if(data.code == 200){
+			data = data.data;//这里是data.data，因为传过来的是一个名为data的Json对象，但是真正要取的是里面的data.data
+		//将响应数据渲染到弹框中
+		$("#trainnumber_dialog_tid").val(data.tid);
+		$("#trainnumber_dialog_tname").val(data.tname);
+		$("#trainnumber_dialog_type").val(data.typeid);
+		$("#trainnumber_dialog_start").val(data.startname);
+		$("#trainnumber_dialog_end").val(data.endname);
+		$("#trainnumber_dialog_duration").val(data.duration);
+		$("#trainnumber_dialog_rwo").val(data.rwo);
+		$("#trainnumber_dialog_rwoprice").val(data.rwoprice);
+		$("#trainnumber_dialog_rzuo").val(data.rzuo);
+		$("#trainnumber_dialog_rzuoprice").val(data.rzuoprice);
+		$("#trainnumber_dialog_ywo").val(data.ywo);
+		$("#trainnumber_dialog_ywoprice").val(data.ywoprice);
+		$("#trainnumber_dialog_yzuo").val(data.yzuo);
+		$("#trainnumber_dialog_yzuoprice").val(data.yzuoprice);
+		$("#trainnumber_dialog_zhan").val(data.zhan);
+		$("#trainnumber_dialog_zhanprice").val(data.zhanprice);
+		$("#trainnumber_dialog_wostudentprice").val(data.wostudentprice);
+		$("#trainnumber_dialog_zuostudentprice").val(data.zuostudentprice);
+		$("#trainnumber_dialog_status").val(data.status);
+		$('#trainnumber_dialog').dialog({
+			title: '管理员详情信息',
+			fit:true,
+			buttons:[
+				{
+					text:"保存",
+					iconCls:"icon-save",
+					handler:function(){
+						//获取表单信息
+						var tid = $("#trainnumber_dialog_tid").val();
+						var tname = $("#trainnumber_dialog_tname").val();
+						var typeid = $("#trainnumber_dialog_type").val();
+						var startsite = $("#trainnumber_dialog_start").val();
+						var endsite = $("#trainnumber_dialog_end").val();
+						var duration = $("#trainnumber_dialog_duration").val();
+						var rwo = $("#trainnumber_dialog_rwo").val();
+						var rwoprice = $("#trainnumber_dialog_rwoprice").val();
+						var rzuo = $("#trainnumber_dialog_rzuo").val();
+						var rzuoprice = $("#trainnumber_dialog_rzuoprice").val();
+						var ywo = $("#trainnumber_dialog_ywo").val();
+						var ywoprice = $("#trainnumber_dialog_ywoprice").val();
+						var yzuo = $("#trainnumber_dialog_yzuo").val();
+						var yzuoprice = $("#trainnumber_dialog_yzuoprice").val();
+						var zhan = $("#trainnumber_dialog_zhan").val();
+						var zhanprice = $("#trainnumber_dialog_zhanprice").val();
+						var wostudentprice = $("#trainnumber_dialog_wostudentprice").val();
+						var zuostudentprice = $("#trainnumber_dialog_zuostudentprice").val();
+						$.post("../../TrainNumberServlet/lhyupdate", { tid:tid, tname:tname, typeid:typeid, startsite:startsite, endsite:endsite, duration:duration, rwo:rwo, rwoprice:rwoprice, rzuo:rzuo, rzuoprice:rzuoprice, ywo:ywo, ywoprice:ywoprice, yzuo:yzuo, yzuoprice:yzuoprice, zhan:zhan, zhanprice:zhanprice, wostudentprice:wostudentprice, zuostudentprice:zuostudentprice}, data=>{
+							if(data.code == 200){
+								trainnumber_obj.datagrid("reload");
+								$("#trainnumber_dialog").dialog("close");
+								$.messager.show({title:"成功提示", msg:"车次信息修改成功", timeout:2000, showType:"slide"});
+							}else{
+								$.messager.alert("失败提示", "车次信息修改失败", "error");
+							}
+						}, "json")
+					}
+				},
+				{
+					text:"关闭",
+					iconCls:"icon-cancel",
+					handler:function(){
+						$('#trainnumber_dialog').dialog('close')
+					}
+				}
+			]
+		});
+		
+		$('#trainnumber_dialog').dialog('open');
+		}
+	}, "json");
+}
+</script>

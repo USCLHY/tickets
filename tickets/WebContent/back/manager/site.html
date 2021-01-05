@@ -1,0 +1,127 @@
+<table id="site_data" data-options="fit:true"></table>
+
+<script>
+var site_types;
+var site_obj;
+var site_op;
+var site_index = undefined;//记录当前正在编辑的行
+
+$(function(){
+	showsiteDataGrid();
+})
+
+function showsiteDataGrid(){
+	site_obj = $('#site_data').datagrid({
+		url:'../../SiteServlet/lhyfindByPage',
+		queryParams:{},
+		fitColumns:true,
+		striped:true,
+		loadMsg:"数据加载中...",
+		pagination:true,
+		rownumbers:true,
+		singleSelected:true,
+		pageSize:10,
+		pageList:[10,15,20,25,50,100],
+		sortName:"sid",
+		remoteSort:false,
+		columns:[[
+			{field:'sid', title:'站点编号', width:50, align:'center',sortable:'true'},
+			{field:'sname', title:'站点名称', width:70, align:'center', editor:{type:"text"}},
+			{field:'status', title:'站点状态', width:60, align:'center',
+				formatter:function(val, row, index){
+				if(val == 0){
+					return '<font color="red">停业</font>';
+				}else{
+					return '<font color="green">可用</font>';
+				}
+			}},
+			 {field:'_operator', title:'操作', width:40, align:'center', formatter:function(val, row, index){
+				if(row.status == 1){
+					return '<a href="javascript:updatesiteStatus(' + row.sid + ',' + row.status +')" class="navy-icon-edit">封站</a>';
+				}else{
+					return '<a href="javascript:updatesiteStatus(' + row.sid + ',' + row.status +')" class="navy-icon-edit">解封</a>';
+				}
+			}} 
+		]],
+ 		toolbar: [{
+			iconCls: "icon-add",
+			text: "添加",
+			handler:function(){
+				site_op = "add";
+				site_info = "添加";
+				if(site_index != undefined){
+					site_index = undefined;
+					return;
+				}
+				//在表格的最上面添加一行
+				site_obj.datagrid('insertRow', {index:0, row:{}});
+				site_index = 0;
+				site_obj.datagrid('beginEdit', site_index);
+			}
+		}, '-', {
+			iconCls: 'icon-edit',
+			text: '修改',
+			handler:function(){
+				site_op = "updateSname";
+				site_info = "修改";
+				//判断有无正在编辑的行
+				if(site_index != undefined){
+					return;
+				}
+				var row = site_obj.datagrid("getSelected");
+				if(row == null){
+					$.messager.show({title:"温馨提示", msg:"请选择您要修改的站点...", timeout:2000, showType:"slide"});
+					return;
+				}
+				//获取要修改的行索引
+				site_index = site_obj.datagrid("getRowIndex", row);
+				//开启编辑
+				site_obj.datagrid("beginEdit", site_index);
+			}
+		}, '-', {
+			iconCls: 'icon-save',
+			text: "保存",
+			handler:function(){
+				//如果没有编辑的行，则直接返回
+				if(site_index == undefined){
+					return;
+				}
+				site_obj.datagrid("endEdit", site_index);
+				var row = site_obj.datagrid("getChanges")[0];
+				if(row == undefined){
+					return;
+				}
+				row.op = site_op;
+				console.info(row);
+				$.post("../../SiteServlet/lhy" +row.op , row, data=>{
+					if(data.code == 200){
+						$.messager.show({title:"成功提示", msg:"站点信息" + site_info + "成功...", timeout:2000, showType:"slide"});
+						site_obj.datagrid("reload");//刷新页面
+					}else{
+						//没有成功，回滚数据
+						site_obj.datagrid("rejectChanges");
+						$.messager.alert('失败提示', '站点信息' + site_info + '失败...', 'error');
+					}
+					row = null;
+					site_index = undefined;
+				}, "json");
+			}
+		}, '-', {
+			iconCls: 'icon-undo',
+			text:'撤销',
+			handler:function(){
+				site_index = undefined;
+				site_obj.datagrid("rejectChanges");
+			}
+		}] 
+	});
+}
+function updatesiteStatus(sid, status){
+	$.post("../../SiteServlet/lhyupdateStatus", { sid:sid, status:status}, data=>{
+		if(data.code == 200){
+			site_obj.datagrid("reload");
+			$.messager.show({title:"成功提示", msg:"状态修改成功", timeout:2000, showType:"slide"});
+		}
+	}, "json")
+}
+</script>
